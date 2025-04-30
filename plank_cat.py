@@ -1,104 +1,69 @@
 import pyxel
 
 # 画面サイズ
-WIDTH = 128
-HEIGHT = 128
-TIMER_SECONDS = 60
-timer = 0
+WIDTH = 64
+HEIGHT = 96
 
-# ゲームの状態
-mode = "title"  # 最初はタイトル画面
-
-
-class Star:
-    def __init__(self, x, y, dx, dy):
-        self.x = x
-        self.y = y
-        self.dx = dx
-        self.dy = dy
-
-    def update(self):
-        self.x += self.dx
-        self.y += self.dy
-
-        # 画面外に出たら戻す
-        if self.x < 0 or self.x > pyxel.width:
-            self.dx = -self.dx
-        if self.y < 0 or self.y > pyxel.height:
-            self.dy = -self.dy
-
-    def draw(self):
-        pyxel.blt(self.x, self.y, 1, 0, 0, 8, 8, 0)
-
-
-stars = []
-
-
-def add_star():
-    x = pyxel.rndi(10, 100)
-    y = pyxel.rndi(10, 100)
-    dx = pyxel.rndi(-2, 2)
-    dy = pyxel.rndi(-2, 2)
-    stars.append(Star(x, y, dx, dy))
-
-
-def play_music():
-    pyxel.play(0, 0, loop=True)
+# 状態
+state = "ready"  # ready, running, done
+is_hurry = False
+timer = 60  # 秒
+cound_mod = 0
 
 
 def update():
-    global mode, timer
+    global state, timer, is_hurry, count_mod
 
-    if mode == "title":
-        if pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
-            # マウスクリックでスタート
-            if 40 <= pyxel.mouse_x <= 88 and 60 <= pyxel.mouse_y <= 80:
-                mode = "planking"
-                timer = TIMER_SECONDS * 30
-                play_music()
-
-    elif mode == "planking":
-        if timer > 0:
+    if state == "running":
+        if pyxel.frame_count % 30 == count_mod and timer > 0:
             timer -= 1
-        else:
-            mode = "finished"
-            for _ in range(20):
-                add_star()
-    elif mode == "finished":
-        for star in stars:
-            star.update()
+            if timer == 0:
+                state = "done"
+                pyxel.stop()
+        if not is_hurry and timer <= 20:
+            is_hurry = True
+            pos = pyxel.play_pos(0)
+            pyxel.stop()
+            speed = 15
+            pyxel.sounds[0].speed = speed
+            pyxel.sounds[1].speed = speed
+            pyxel.playm(0, (pos[0] * 48 + pos[1]) * speed, True)
+
+    if pyxel.btnp(pyxel.KEY_SPACE) or pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT):
+        if state != "running":
+            state = "running"
+            is_hurry = False
+            timer = 60
+            count_mod = pyxel.frame_count % 30
+            pyxel.sounds[0].speed = 30
+            pyxel.sounds[1].speed = 30
+            pyxel.playm(0, 0, True)
 
 
 def draw():
     pyxel.cls(7)  # 白背景
 
-    if mode == "title":
-        # スタートボタン
-        pyxel.rect(40, 60, 48, 20, 12)  # 赤っぽいボタン
-        pyxel.text(50, 66, "START", 7)  # 白文字
-    elif mode == "planking":
-        seconds_left = timer // 30  # 秒単位に戻す
+    # タイトル
+    pyxel.text(WIDTH // 2 - 18, 10, "PLANK CAT", 0)
 
-        # ぷるぷる演出
-        shake_x = 0
-        shake_y = 0
-        if seconds_left <= 10:
-            shake_x = pyxel.rndi(-1, 1)
-            shake_y = pyxel.rndi(-1, 1)
+    # STARTボタン
+    pyxel.rect(WIDTH // 2 - 20, 30, 40, 16, 7)
+    pyxel.rectb(WIDTH // 2 - 20, 30, 40, 16, 0)
+    pyxel.text(WIDTH // 2 - 10, 35, "START", 0)
 
-        pyxel.text(50 + shake_x, 68 + shake_y, f"{seconds_left}s", 0)
-        pyxel.blt(48 + shake_x, 50 + shake_y, 0, 0, 0, 16, 16, 0)
+    # 残り時間（中央に表示）
+    pyxel.text(WIDTH // 2 - 4, 55, f"{timer:02}", 0)
 
-    elif mode == "finished":
-        pyxel.cls(7)
-        for star in stars:
-            star.draw()
-        # 喜び猫を表示（(32,0) から 32x32 を使う想定）
-        pyxel.blt(48, 40, 0, 16, 0, 16, 16, 0)
-        pyxel.text(30, 80, "Good job!", pyxel.frame_count % 16)  # 色をチカチカ変化
+    # 猫のドット絵
+    pyxel.blt(WIDTH // 2 - 16, 70, 0, 0, 0, 13, 16, 7)
+    pyxel.blt(WIDTH // 2 + 6, 70, 0, 22, 0, 10, 16, 7)
+    if timer > 10 or timer == 0:
+        pyxel.blt(WIDTH // 2 - 3, 70, 0, 13, 0, 9, 16, 7)
+    else:
+        dy = pyxel.rndi(-1, 1)
+        pyxel.blt(WIDTH // 2 - 3, 70 + dy, 0, 13, 0, 9, 16, 7)
 
 
-# Pyxelアプリ起動
 pyxel.init(WIDTH, HEIGHT, title="Plank Cat")
 pyxel.load("assets/cat.pyxres")
 pyxel.run(update, draw)
