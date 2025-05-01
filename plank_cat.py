@@ -1,22 +1,22 @@
 import pyxel
 
-from mini_ui import Button, Column, Label
+from mini_ui import Blank, Button, Column, Label, Widget
 
 
-class Cat:
+class Cat(Widget):
     def __init__(self, x=0, y=0):
         self.x = x
         self.y = y
         self.w = 32
         self.h = 16
         self.dy = 0
-        self.timer = 0
+        self.is_purupuru = False
 
     def update(self):
-        if self.timer > 10 or self.timer == 0:
-            self.dy = 0
-        else:
+        if self.is_purupuru:
             self.dy = pyxel.rndi(-1, 1)
+        else:
+            self.dy = 0
 
     def draw(self):
         # 猫のドット絵
@@ -39,32 +39,45 @@ class App:
         pyxel.mouse(True)
         pyxel.load("assets/cat.pyxres")
         self.timer_label = Label("", color=0)
+        button = Button(
+            "START",
+            self.on_start,
+            w=40,
+            h=16,
+            color_text=0,
+            color_rect=0,
+        )
         self.cat = Cat()
         self.column = Column(
-            0,
-            0,
-            self.width,
-            self.height,
-            8,
-            [
+            children=[
                 Label("PLANK CAT"),
-                Button(
-                    "START",
-                    self.on_start,
-                    0,
-                    0,
-                    40,
-                    16,
-                    color_text=0,
-                    color_rect=0,
-                    center_x=True,
-                ),
+                Blank(h=8),
+                button,
+                Blank(h=8),
                 self.timer_label,
+                Blank(h=8),
                 self.cat,
             ],
         )
 
         pyxel.run(self.update, self.draw)
+
+    def start_music(self):
+        speed = 30
+        pyxel.sounds[0].speed = speed
+        pyxel.sounds[1].speed = speed
+        pyxel.playm(0, 0, True)
+
+    def speedup_music(self):
+        speed = 15
+        pos = pyxel.play_pos(0)
+        pyxel.stop()
+        pyxel.sounds[0].speed = speed
+        pyxel.sounds[1].speed = speed
+        pyxel.playm(0, (pos[0] * 48 + pos[1]) * speed, True)
+
+    def stop_music(self):
+        pyxel.stop()
 
     def on_start(self):
         if self.state != "running":
@@ -72,9 +85,7 @@ class App:
             self.is_hurry = False
             self.timer = 60
             self.count_mod = pyxel.frame_count % 30
-            pyxel.sounds[0].speed = 30
-            pyxel.sounds[1].speed = 30
-            pyxel.playm(0, 0, True)
+            self.start_music()
 
     def update(self):
         self.timer_label.text = f"{self.timer:02}"
@@ -83,16 +94,11 @@ class App:
                 self.timer -= 1
                 if self.timer == 0:
                     self.state = "done"
-                    pyxel.stop()
+                    self.stop_music()
             if not self.is_hurry and self.timer <= 20:
                 self.is_hurry = True
-                pos = pyxel.play_pos(0)
-                pyxel.stop()
-                speed = 15
-                pyxel.sounds[0].speed = speed
-                pyxel.sounds[1].speed = speed
-                pyxel.playm(0, (pos[0] * 48 + pos[1]) * speed, True)
-        self.cat.timer = self.timer
+                self.speedup_music()
+        self.cat.is_purupuru = 0 < self.timer and self.timer < 10
         self.column.update()
 
     def draw(self):
