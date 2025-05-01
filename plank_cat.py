@@ -36,7 +36,7 @@ class App:
         self.count_mod = 0
 
         pyxel.init(self.width, self.height, title="Plank Cat")
-        pyxel.mouse(True)
+        # pyxel.mouse(True)
         pyxel.load("assets/cat.pyxres")
         self.timer_label = Label("", color=0)
         button = Button(
