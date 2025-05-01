@@ -33,7 +33,7 @@ class Button(Widget):
         h=16,
         color_text=1,
         color_rect=1,
-        center_x=False,
+        center_x=True,
         fill=False,
     ):
         self.text = text
@@ -68,23 +68,29 @@ class Button(Widget):
         pyxel.text(text_x, text_y, self.text, 0)
 
 
+class Blank(Widget):
+    def __init__(self, w=0, h=0):
+        self.w = w
+        self.h = h
+
+
 # 縦に並べるレイアウト
 class Column(Widget):
     def __init__(
         self,
-        x,
-        y,
+        x=0,
+        y=0,
         w=None,
         h=None,
-        spacing=8,
+        spacing=0,
         children=[],
         center=True,
         align="center",
     ):
         self.x = x
         self.y = y
-        self.w = w
-        self.h = h
+        self.w = w if w is not None else pyxel.width
+        self.h = h if h is not None else pyxel.height
         self.spacing = spacing
         self.children = children
         self.center = center  # Y軸の中央揃え
