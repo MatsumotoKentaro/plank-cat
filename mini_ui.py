@@ -68,6 +68,26 @@ class Button(Widget):
         pyxel.text(text_x, text_y, self.text, 0)
 
 
+class TransButton(Widget):
+    def __init__(self, on_pressed, w, h, x=0, y=0):
+        self.on_pressed = on_pressed
+        self.w = w
+        self.h = h
+        self.x = x
+        self.y = y
+
+    def update(self):
+        if (
+            pyxel.btnp(pyxel.MOUSE_BUTTON_LEFT)
+            and self.x <= pyxel.mouse_x <= self.x + self.w
+            and self.y <= pyxel.mouse_y <= self.y + self.h
+        ):
+            self.on_pressed()
+
+    def draw(self):
+        pass
+
+
 class Blank(Widget):
     def __init__(self, w=0, h=0):
         self.w = w
