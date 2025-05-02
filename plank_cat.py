@@ -137,7 +137,7 @@ class App:
         self.height = 96
 
         pyxel.init(self.width, self.height, title="Plank Cat")
-        pyxel.mouse(True)
+        # pyxel.mouse(True)
         pyxel.load("assets/cat.pyxres")
         self.timer_label = Label("", color=0)
         up_button = UpButton(self.on_up, 7, 4, 0)
