@@ -1,6 +1,6 @@
 import pyxel
 
-from mini_ui import Blank, Button, Column, Label, Widget
+from mini_ui import Blank, Button, Column, Label, TransButton, Widget
 
 
 class Cat(Widget):
@@ -25,11 +25,47 @@ class Cat(Widget):
         pyxel.blt(self.x + 22, self.y, 0, 22, 0, 10, 16, 7)
 
 
+class UpButton(TransButton):
+    def __init__(self, on_pressed, w, h, color, x=0, y=0):
+        super().__init__(on_pressed, w, h, x, y)
+        self.color = color
+
+    def draw(self):
+        x1 = self.x
+        y1 = self.y + self.h - 1
+        x2 = self.x + self.w - 1
+        y2 = y1
+        x3 = (2 * self.x + self.w - 1) / 2
+        y3 = self.y
+        pyxel.tri(x1, y1, x2, y2, x3, y3, self.color)
+
+
+class DownButton(TransButton):
+    def __init__(self, on_pressed, w, h, color, x=0, y=0):
+        super().__init__(on_pressed, w, h, x, y)
+        self.color = color
+
+    def draw(self):
+        x1 = self.x
+        y1 = self.y
+        x2 = self.x + self.w - 1
+        y2 = y1
+        x3 = (2 * self.x + self.w - 1) / 2
+        y3 = self.y + self.h - 1
+        pyxel.tri(x1, y1, x2, y2, x3, y3, self.color)
+
+
 class AppState:
     def __init__(self, app):
         self.app = app
 
     def on_start(self):
+        pass
+
+    def on_up(self):
+        pass
+
+    def on_down(self):
         pass
 
     def update(self):
@@ -43,14 +79,24 @@ class ReadyState(AppState):
     def on_start(self):
         self.app.set_state(RunningState(self.app))
 
+    def on_up(self):
+        self.app.timer_limit += 1
+        if self.app.timer_limit > 99:
+            self.app.timer_limit = 99
+
+    def on_down(self):
+        self.app.timer_limit -= 1
+        if self.app.timer_limit < 10:
+            self.app.timer_limit = 10
+
     def update(self):
-        self.app.timer_label.text = "60"
+        self.app.timer_label.text = f"{self.app.timer_limit:2}"
 
 
 class RunningState(AppState):
     def __init__(self, app):
         super().__init__(app)
-        self.timer = 60
+        self.timer = self.app.timer_limit
         self.count_mod = 0
         self.is_hurry = False
         self.app.start_music()
@@ -73,12 +119,16 @@ class DoneState(AppState):
     def __init__(self, app):
         super().__init__(app)
         self.app.stop_music()
-
-    def on_start(self):
-        self.app.set_state(RunningState(self.app))
+        self.timer = 5
+        self.count_mod = 0
 
     def update(self):
         self.app.timer_label.text = "FINISHED!"
+        self.count_mod += 1
+        if self.count_mod % 30 == 0:
+            self.timer -= 1
+            if self.timer <= 0:
+                self.app.set_state(ReadyState(self.app))
 
 
 class App:
@@ -87,8 +137,11 @@ class App:
         self.height = 96
 
         pyxel.init(self.width, self.height, title="Plank Cat")
+        pyxel.mouse(True)
         pyxel.load("assets/cat.pyxres")
         self.timer_label = Label("", color=0)
+        up_button = UpButton(self.on_up, 7, 4, 0)
+        down_button = DownButton(self.on_down, 7, 4, 0)
         button = Button(
             "START",
             self.on_start,
@@ -103,12 +156,17 @@ class App:
                 Label("PLANK CAT"),
                 Blank(h=8),
                 button,
-                Blank(h=8),
+                Blank(h=2),
+                up_button,
+                Blank(h=2),
                 self.timer_label,
-                Blank(h=8),
+                Blank(h=2),
+                down_button,
+                Blank(h=2),
                 self.cat,
             ],
         )
+        self.timer_limit = 60
 
         self.state = ReadyState(self)
 
@@ -119,6 +177,12 @@ class App:
 
     def on_start(self):
         self.state.on_start()
+
+    def on_up(self):
+        self.state.on_up()
+
+    def on_down(self):
+        self.state.on_down()
 
     def update(self):
         self.state.update()
