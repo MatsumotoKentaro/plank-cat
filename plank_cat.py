@@ -25,18 +25,68 @@ class Cat(Widget):
         pyxel.blt(self.x + 22, self.y, 0, 22, 0, 10, 16, 7)
 
 
+class AppState:
+    def __init__(self, app):
+        self.app = app
+
+    def on_start(self):
+        pass
+
+    def update(self):
+        pass
+
+    def draw(self):
+        pass
+
+
+class ReadyState(AppState):
+    def on_start(self):
+        self.app.set_state(RunningState(self.app))
+
+    def update(self):
+        self.app.timer_label.text = "60"
+
+
+class RunningState(AppState):
+    def __init__(self, app):
+        super().__init__(app)
+        self.timer = 60
+        self.count_mod = 0
+        self.is_hurry = False
+        self.app.start_music()
+
+    def update(self):
+        self.count_mod += 1
+        if self.count_mod % 30 == 0:
+            self.timer -= 1
+            if self.timer <= 0:
+                self.app.set_state(DoneState(self.app))
+            if not self.is_hurry and self.timer <= 20:
+                self.is_hurry = True
+                self.app.speedup_music()
+
+        self.app.timer_label.text = f"{self.timer:2}"
+        self.app.cat.is_purupuru = 0 < self.timer and self.timer < 10
+
+
+class DoneState(AppState):
+    def __init__(self, app):
+        super().__init__(app)
+        self.app.stop_music()
+
+    def on_start(self):
+        self.app.set_state(RunningState(self.app))
+
+    def update(self):
+        self.app.timer_label.text = "FINISHED!"
+
+
 class App:
     def __init__(self):
         self.width = 64
         self.height = 96
-        # 状態
-        self.state = "ready"  # ready, running, done
-        self.is_hurry = False
-        self.timer = 60  # 秒
-        self.count_mod = 0
 
         pyxel.init(self.width, self.height, title="Plank Cat")
-        # pyxel.mouse(True)
         pyxel.load("assets/cat.pyxres")
         self.timer_label = Label("", color=0)
         button = Button(
@@ -60,7 +110,23 @@ class App:
             ],
         )
 
+        self.state = ReadyState(self)
+
         pyxel.run(self.update, self.draw)
+
+    def set_state(self, state):
+        self.state = state
+
+    def on_start(self):
+        self.state.on_start()
+
+    def update(self):
+        self.state.update()
+        self.column.update()
+
+    def draw(self):
+        pyxel.cls(7)
+        self.column.draw()
 
     def start_music(self):
         speed = 30
@@ -78,32 +144,6 @@ class App:
 
     def stop_music(self):
         pyxel.stop()
-
-    def on_start(self):
-        if self.state != "running":
-            self.state = "running"
-            self.is_hurry = False
-            self.timer = 60
-            self.count_mod = pyxel.frame_count % 30
-            self.start_music()
-
-    def update(self):
-        self.timer_label.text = f"{self.timer:02}"
-        if self.state == "running":
-            if pyxel.frame_count % 30 == self.count_mod and self.timer > 0:
-                self.timer -= 1
-                if self.timer == 0:
-                    self.state = "done"
-                    self.stop_music()
-            if not self.is_hurry and self.timer <= 20:
-                self.is_hurry = True
-                self.speedup_music()
-        self.cat.is_purupuru = 0 < self.timer and self.timer < 10
-        self.column.update()
-
-    def draw(self):
-        pyxel.cls(7)  # 白背景
-        self.column.draw()
 
 
 App()
