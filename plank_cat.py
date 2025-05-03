@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 
 import pyxel
 
@@ -64,6 +64,33 @@ class DownButton(TransButton):
         x3 = (2 * self.x + self.w - 1) / 2
         y3 = self.y + self.h - 1
         pyxel.tri(x1, y1, x2, y2, x3, y3, self.color)
+
+
+class Kusa(Widget):
+    def __init__(self, x=0, y=0, weeks=15):
+        self.x = x
+        self.y = y
+        self.weeks = weeks
+        self.w = 3 * self.weeks + 1
+        self.h = 3 * 7 + 1
+        self.done_list = [False] * 7 * self.weeks
+
+    def update(self):
+        today = date.today()
+        today_weekday = (today.weekday() + 1) % 7
+        last_day = today + timedelta(days=6 - today_weekday)
+        for i in range(7 * self.weeks):
+            target_date = last_day - timedelta(days=7 * self.weeks - 1 - i)
+            count = load(target_date.strftime("%Y-%m-%d"))
+            self.done_list[i] = count is not None
+
+    def draw(self):
+        for j in range(self.weeks):
+            x = self.x + 1 + j * 3
+            for i in range(7):
+                y = self.y + 1 + i * 3
+                color = 11 if self.done_list[j * 7 + i] else 13
+                pyxel.rect(x, y, 2, 2, color)
 
 
 class AppState:
@@ -172,7 +199,7 @@ class App:
         self.column = Column(
             children=[
                 Label("PLANK CAT"),
-                Blank(h=8),
+                Blank(h=2),
                 button,
                 Blank(h=2),
                 up_button,
@@ -182,6 +209,8 @@ class App:
                 down_button,
                 Blank(h=2),
                 self.cat,
+                Blank(h=2),
+                Kusa(),
             ],
         )
         timer_limit = load("timer_limit")
