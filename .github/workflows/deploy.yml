@@ -36,6 +36,7 @@ jobs:
         run: |
           uv run pyxel package ./ plank_cat.py
           uv run pyxel app2html plank-cat.pyxapp
+          sed -i 's/, gamepad: "enabled"//g' plank-cat.html
           mkdir -p dist
           mv plank-cat.html dist/index.html
       
