@@ -1,3 +1,5 @@
+from datetime import date
+
 import pyxel
 
 from libs.mini_ui.mini_ui import (
@@ -132,6 +134,11 @@ class DoneState(AppState):
         self.app.stop_music()
         self.timer = 5
         self.count_mod = 0
+        today = date.today().strftime("%Y-%m-%d")
+        today_count_loaded = load(today)
+        today_count = int(today_count_loaded) if today_count_loaded is not None else 0
+        today_count += 1
+        save(today, today_count)
 
     def update(self):
         self.app.timer_label.text = "FINISHED!"
