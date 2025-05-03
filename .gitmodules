@@ -1,0 +1,3 @@
+[submodule "libs/mini_ui"]
+	path = libs/mini_ui
+	url = https://github.com/MatsumotoKentaro/pyxel_ui
