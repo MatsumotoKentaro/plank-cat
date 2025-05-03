@@ -1,6 +1,17 @@
+from datetime import date
+
 import pyxel
 
-from mini_ui import Blank, Button, Column, Label, TransButton, Widget
+from libs.mini_ui.mini_ui import (
+    Blank,
+    Button,
+    Column,
+    Label,
+    TransButton,
+    Widget,
+    load,
+    save,
+)
 
 
 class Cat(Widget):
@@ -83,11 +94,13 @@ class ReadyState(AppState):
         self.app.timer_limit += 1
         if self.app.timer_limit > 99:
             self.app.timer_limit = 99
+        save("timer_limit", self.app.timer_limit)
 
     def on_down(self):
         self.app.timer_limit -= 1
         if self.app.timer_limit < 10:
             self.app.timer_limit = 10
+        save("timer_limit", self.app.timer_limit)
 
     def update(self):
         self.app.timer_label.text = f"{self.app.timer_limit:2}"
@@ -121,6 +134,11 @@ class DoneState(AppState):
         self.app.stop_music()
         self.timer = 5
         self.count_mod = 0
+        today = date.today().strftime("%Y-%m-%d")
+        today_count_loaded = load(today)
+        today_count = int(today_count_loaded) if today_count_loaded is not None else 0
+        today_count += 1
+        save(today, today_count)
 
     def update(self):
         self.app.timer_label.text = "FINISHED!"
@@ -166,7 +184,8 @@ class App:
                 self.cat,
             ],
         )
-        self.timer_limit = 60
+        timer_limit = load("timer_limit")
+        self.timer_limit = int(timer_limit) if timer_limit is not None else 60
 
         self.state = ReadyState(self)
 
