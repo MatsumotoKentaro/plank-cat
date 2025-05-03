@@ -1,5 +1,15 @@
 import pyxel
-from mini_ui import Blank, Button, Column, Label, TransButton, Widget, load, save
+
+from libs.mini_ui.mini_ui import (
+    Blank,
+    Button,
+    Column,
+    Label,
+    TransButton,
+    Widget,
+    load,
+    save,
+)
 
 
 class Cat(Widget):
