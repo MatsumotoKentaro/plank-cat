@@ -1,6 +1,5 @@
 import pyxel
-
-from mini_ui import Blank, Button, Column, Label, TransButton, Widget
+from mini_ui import Blank, Button, Column, Label, TransButton, Widget, load, save
 
 
 class Cat(Widget):
@@ -83,11 +82,13 @@ class ReadyState(AppState):
         self.app.timer_limit += 1
         if self.app.timer_limit > 99:
             self.app.timer_limit = 99
+        save("timer_limit", self.app.timer_limit)
 
     def on_down(self):
         self.app.timer_limit -= 1
         if self.app.timer_limit < 10:
             self.app.timer_limit = 10
+        save("timer_limit", self.app.timer_limit)
 
     def update(self):
         self.app.timer_label.text = f"{self.app.timer_limit:2}"
@@ -166,7 +167,8 @@ class App:
                 self.cat,
             ],
         )
-        self.timer_limit = 60
+        timer_limit = load("timer_limit")
+        self.timer_limit = int(timer_limit) if timer_limit is not None else 60
 
         self.state = ReadyState(self)
 
