@@ -73,7 +73,20 @@ class Kusa(Widget):
         self.weeks = weeks
         self.w = 3 * self.weeks + 1
         self.h = 3 * 7 + 1
-        self.done_list = [False] * 7 * self.weeks
+        self.colors = [13] * 7 * self.weeks
+        self.set_color()
+
+    def rgb2hex(self, r, g, b):
+        color = (r << 16) + (g << 8) + b
+        return color
+
+    def set_color(self):
+        pyxel.colors[7] = self.rgb2hex(255, 255, 255)
+        pyxel.colors[1] = self.rgb2hex(239, 242, 245)
+        pyxel.colors[2] = self.rgb2hex(186, 235, 191)
+        pyxel.colors[3] = self.rgb2hex(109, 190, 116)
+        pyxel.colors[4] = self.rgb2hex(83, 160, 88)
+        pyxel.colors[5] = self.rgb2hex(45, 97, 48)
 
     def update(self):
         today = date.today()
@@ -82,14 +95,27 @@ class Kusa(Widget):
         for i in range(7 * self.weeks):
             target_date = last_day - timedelta(days=7 * self.weeks - 1 - i)
             count = load(target_date.strftime("%Y-%m-%d"))
-            self.done_list[i] = count is not None
+            count = int(count) if count is not None else 0
+            self.colors[i] = self.get_color(count)
+
+    def get_color(self, i):
+        if i == 0:
+            return 1
+        elif i == 1:
+            return 2
+        elif i == 2:
+            return 3
+        elif i < 5:
+            return 4
+        else:
+            return 5
 
     def draw(self):
         for j in range(self.weeks):
             x = self.x + 1 + j * 3
             for i in range(7):
                 y = self.y + 1 + i * 3
-                color = 11 if self.done_list[j * 7 + i] else 13
+                color = self.colors[j * 7 + i]
                 pyxel.rect(x, y, 2, 2, color)
 
 
